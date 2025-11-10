@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iLoveCesun - Herramientas PDF en línea</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">
+                <i class="fas fa-file-pdf"></i>
+                <span>iLoveCesun</span>
+            </div>
+            <div class="nav-links">
+                <a href="#" class="active">Inicio</a>
+                <a href="#tools">Herramientas</a>
+                <a href="#about">Acerca de</a>
+            </div>
+        </nav>
+        <div class="hero">
+            <h1>Herramientas PDF en línea</h1>
+            <p>Convierte, edita y manipula archivos PDF de forma gratuita</p>
+        </div>
+    </header>
+
+    <main>
+        <section id="tools" class="tools-section">
+            <h2>Elige una herramienta</h2>
+            <div class="tools-grid">
+                <div class="tool-card" data-tool="merge">
+                    <i class="fas fa-object-group"></i>
+                    <h3>Combinar PDF</h3>
+                    <p>Combina múltiples archivos PDF en uno solo</p>
+                </div>
+                <div class="tool-card" data-tool="split">
+                    <i class="fas fa-cut"></i>
+                    <h3>Dividir PDF</h3>
+                    <p>Divide un PDF en varios documentos</p>
+                </div>
+                <div class="tool-card" data-tool="word-to-pdf">
+                    <i class="fas fa-file-word"></i>
+                    <h3>Word a PDF</h3>
+                    <p>Convierte documentos de Word a PDF</p>
+                </div>
+                <div class="tool-card" data-tool="pdf-to-word">
+                    <i class="fas fa-file-word"></i>
+                    <h3>PDF a Word</h3>
+                    <p>Convierte PDF a documentos de Word editables</p>
+                </div>
+                <div class="tool-card" data-tool="compress">
+                    <i class="fas fa-compress-alt"></i>
+                    <h3>Comprimir PDF</h3>
+                    <p>Reduce el tamaño de archivos PDF</p>
+                </div>
+                <div class="tool-card" data-tool="unlock">
+                    <i class="fas fa-lock-open"></i>
+                    <h3>Desbloquear PDF</h3>
+                    <p>Elimina contraseñas de PDF protegidos</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="file-upload" class="upload-section hidden">
+            <div class="upload-container">
+                <div class="upload-area" id="dropZone">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <h3>Arrastra y suelta tus archivos aquí</h3>
+                    <p>o</p>
+                    <button class="btn" id="selectFiles">Seleccionar archivos</button>
+                    <input type="file" id="fileInput" multiple accept=".pdf,.doc,.docx" style="display: none;">
+                </div>
+                <div class="file-list" id="fileList"></div>
+                <div class="actions">
+                    <button class="btn btn-secondary" id="backToTools">Volver</button>
+                    <button class="btn btn-primary" id="processFiles" disabled>Procesar</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="result" class="result-section hidden">
+            <div class="result-container">
+                <div class="success-message">
+                    <i class="fas fa-check-circle"></i>
+                    <h3>¡Archivo procesado con éxito!</h3>
+                    <div id="viewer" style="width: 100%; height: 500px; margin: 20px 0;"></div>
+                    <a href="#" class="btn btn-download" id="downloadResult">
+                        <i class="fas fa-download"></i> Descargar
+                    </a>
+                    <button class="btn" id="newConversion">Nueva conversión</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer id="about">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>iLoveCesun</h4>
+                <p>Herramientas PDF en línea gratuitas y fáciles de usar.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Enlaces útiles</h4>
+                <ul>
+                    <li><a href="#">Términos de servicio</a></li>
+                    <li><a href="#">Política de privacidad</a></li>
+                    <li><a href="#">Contáctanos</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 iLoveCesun. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <div class="loading-overlay hidden" id="loadingOverlay">
+        <div class="spinner"></div>
+        <p>Procesando archivo...</p>
+    </div>
+
+    <!-- PDFTron SDK -->
+    <script src="https://www.pdftron.com/downloads/webviewer/lib/webviewer.min.js"></script>
+    <script src="js/script.js"></script>
+</body>
+</html>
