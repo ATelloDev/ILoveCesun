@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Convertidor de Imágenes - Turtle Convert</title>
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/convertidor.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="../index.html" class="back-btn">← Volver al Home</a>
+            <h1><span>🐢</span> Convertidor de Imágenes</h1>
+            <p>Convierte múltiples imágenes manteniendo la calidad</p>
+            <div class="file-limit">Límite: 50MB por archivo</div>
+        </div>
+
+        <div class="main-content">
+            <!-- Zona de archivo -->
+            <div class="drop-zone" id="dropZone">
+                <div class="file-icon">📁</div>
+                <h3>Arrastra tus imágenes aquí</h3>
+                <p>Formatos soportados: JPG, PNG, WebP, GIF, BMP</p>
+                <p>Múltiples archivos permitidos (máx. 50MB cada uno)</p>
+                <button class="browse-btn" id="browseBtn">Seleccionar imágenes</button>
+                <input type="file" id="fileInput" style="display: none;" accept=".jpg,.jpeg,.png,.webp,.gif,.bmp" multiple>
+            </div>
+
+            <!-- Lista de archivos -->
+            <div class="files-list" id="filesList">
+                <div class="files-header">
+                    <h3>Archivos seleccionados (<span id="filesCount">0</span>)</h3>
+                    <button class="remove-btn" id="clearAllBtn" title="Eliminar todos">🗑️</button>
+                </div>
+                <div class="files-container" id="filesContainer">
+                    <!-- Los archivos se mostrarán aquí -->
+                </div>
+            </div>
+
+            <!-- Opciones de conversión -->
+            <div class="conversion-section">
+                <h3>Convertir a:</h3>
+                <div class="conversion-options">
+                    <div class="conversion-option" data-format="jpg">
+                        <div class="format-icon">🖼️</div>
+                        <div>JPG</div>
+                        <small>Mejor para fotos</small>
+                    </div>
+                    <div class="conversion-option" data-format="png">
+                        <div class="format-icon">🖼️</div>
+                        <div>PNG</div>
+                        <small>Calidad sin pérdida</small>
+                    </div>
+                    <div class="conversion-option" data-format="webp">
+                        <div class="format-icon">🌐</div>
+                        <div>WebP</div>
+                        <small>Moderno y liviano</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Configuraciones -->
+            <div class="settings">
+                <h3>Configuración de conversión:</h3>
+                
+                <div class="setting-group">
+                    <label for="quality">Calidad de compresión:</label>
+                    <input type="range" id="quality" min="1" max="100" value="85">
+                    <div class="quality-value" id="qualityValue">85%</div>
+                </div>
+                
+                <div class="setting-group">
+                    <label>Tamaño de salida:</label>
+                    <div class="size-options">
+                        <div class="size-option selected" data-scale="1">Original</div>
+                        <div class="size-option" data-scale="0.75">75%</div>
+                        <div class="size-option" data-scale="0.5">50%</div>
+                        <div class="size-option" data-scale="0.25">25%</div>
+                        <div class="size-option" data-scale="2">200%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progreso global -->
+            <div class="global-progress" id="globalProgress">
+                <div class="progress-info">
+                    <span>Progreso general</span>
+                    <span id="globalProgressText">0/0</span>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar" id="globalProgressBar"></div>
+                </div>
+            </div>
+
+            <!-- Botones de acción -->
+            <div class="action-buttons">
+                <button class="action-btn convert-btn" id="convertBtn" disabled>Convertir Todas las Imágenes</button>
+                <button class="action-btn reset-btn" id="resetBtn">Reiniciar Todo</button>
+            </div>
+
+            <!-- Resultados -->
+            <div class="results-section" id="resultsSection">
+                <h3>Resultados de la conversión</h3>
+                <div class="download-all">
+                    <button class="download-all-btn" id="downloadAllBtn">📥 Descargar Todos los Archivos</button>
+                </div>
+                <div class="results-container" id="resultsContainer">
+                    <!-- Los resultados se mostrarán aquí -->
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>&copy; 2024 Turtle Convert</p>
+        </div>
+    </div>
+
+    <!-- Modal para preview -->
+    <div class="preview-modal" id="previewModal">
+        <div class="preview-content">
+            <button class="preview-close" id="previewClose">&times;</button>
+            <img class="preview-image" id="previewImage" src="" alt="Vista previa">
+            <div class="preview-info" id="previewInfo"></div>
+        </div>
+    </div>
+
+    <script src="../js/convertidor.js"></script>
+</body>
+</html>
