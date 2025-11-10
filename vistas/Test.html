@@ -272,11 +272,17 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             cursor: pointer;
             transition: all 0.3s ease;
+            border: 2px solid transparent;
         }
 
         .pdf-page:hover {
             transform: translateY(-3px);
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .pdf-page.selected {
+            border-color: var(--accent);
+            background: #f0fff0;
         }
 
         .page-preview {
@@ -290,6 +296,93 @@
             justify-content: center;
             font-size: 2rem;
             color: var(--primary);
+        }
+
+        /* Configuración de separación */
+        .split-options {
+            background: var(--gray);
+            padding: 25px;
+            border-radius: 12px;
+            margin: 30px 0;
+            display: none;
+        }
+
+        .split-options.show {
+            display: block;
+        }
+
+        .split-mode {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+
+        .split-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .range-selection {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid var(--primary-light);
+            margin-top: 15px;
+            display: none;
+        }
+
+        .range-selection.show {
+            display: block;
+        }
+
+        .range-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .range-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .range-input input {
+            width: 80px;
+            padding: 8px;
+            border: 1px solid var(--primary-light);
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .range-list {
+            margin-top: 15px;
+        }
+
+        .range-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: var(--gray);
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        .range-display {
+            flex: 1;
+        }
+
+        .add-range-btn {
+            background: var(--primary-light);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
         }
 
         /* Configuración de nombres */
@@ -581,7 +674,7 @@
                 grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
             }
             
-            .naming-options {
+            .split-mode, .naming-options {
                 flex-direction: column;
                 gap: 15px;
             }
@@ -597,6 +690,11 @@
             
             .pages-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .range-controls {
+                flex-direction: column;
+                align-items: flex-start;
             }
         }
     </style>
@@ -642,8 +740,38 @@
                     <div class="pdf-pages" id="splitPdfPages"></div>
                 </div>
 
+                <div class="split-options" id="splitOptions">
+                    <h3>Modo de separación</h3>
+                    <div class="split-mode">
+                        <div class="split-option">
+                            <input type="radio" id="splitAll" name="splitMode" value="all" checked>
+                            <label for="splitAll">Separar todas las páginas individualmente</label>
+                        </div>
+                        <div class="split-option">
+                            <input type="radio" id="splitRanges" name="splitMode" value="ranges">
+                            <label for="splitRanges">Definir rangos de páginas</label>
+                        </div>
+                    </div>
+
+                    <div class="range-selection" id="rangeSelection">
+                        <h4>Definir rangos de páginas</h4>
+                        <div class="range-controls">
+                            <div class="range-input">
+                                <label>Desde:</label>
+                                <input type="number" id="rangeFrom" min="1" value="1">
+                            </div>
+                            <div class="range-input">
+                                <label>Hasta:</label>
+                                <input type="number" id="rangeTo" min="1" value="1">
+                            </div>
+                            <button class="add-range-btn" id="addRangeBtn">Agregar Rango</button>
+                        </div>
+                        <div class="range-list" id="rangeList"></div>
+                    </div>
+                </div>
+
                 <div class="naming-section" id="splitNamingSection">
-                    <h3>Configurar nombres de páginas</h3>
+                    <h3>Configurar nombres de archivos</h3>
                     <div class="naming-options">
                         <div class="naming-option">
                             <input type="radio" id="splitAutoNaming" name="splitNamingType" value="auto" checked>
@@ -675,10 +803,9 @@
                 </div>
 
                 <div class="results-section" id="splitResultsSection">
-                    <h3>Páginas Extraídas</h3>
+                    <h3>Archivos PDF Generados</h3>
                     <div class="download-options">
-                        <button class="download-btn" id="splitDownloadAllBtn">📥 Descargar Todas</button>
-                        <button class="download-btn" id="splitDownloadZipBtn">📦 Descargar ZIP</button>
+                        <button class="download-btn" id="splitDownloadZipBtn">📦 Descargar Todo como ZIP</button>
                     </div>
                     <div class="pages-grid" id="splitPagesGrid"></div>
                 </div>
@@ -754,9 +881,11 @@
         const state = {
             split: {
                 pdfDoc: null,
-                pageImages: [],
-                pageNames: [],
-                currentFile: null
+                totalPages: 0,
+                currentFile: null,
+                splitRanges: [],
+                outputFiles: [],
+                fileNames: []
             },
             merge: {
                 pdfs: [],
@@ -809,6 +938,9 @@
             const browseBtn = document.getElementById('splitBrowseBtn');
             const processBtn = document.getElementById('splitProcessBtn');
             const resetBtn = document.getElementById('splitResetBtn');
+            const splitAll = document.getElementById('splitAll');
+            const splitRanges = document.getElementById('splitRanges');
+            const addRangeBtn = document.getElementById('addRangeBtn');
             const autoNaming = document.getElementById('splitAutoNaming');
             const manualNaming = document.getElementById('splitManualNaming');
 
@@ -818,6 +950,10 @@
             
             setupDropZone(dropZone, handleSplitFile);
             
+            splitAll.addEventListener('change', updateSplitMode);
+            splitRanges.addEventListener('change', updateSplitMode);
+            addRangeBtn.addEventListener('click', addRange);
+            
             autoNaming.addEventListener('change', updateSplitNamingMode);
             manualNaming.addEventListener('change', updateSplitNamingMode);
             
@@ -825,7 +961,6 @@
             resetBtn.addEventListener('click', resetSplitTab);
 
             // Descargas
-            document.getElementById('splitDownloadAllBtn').addEventListener('click', downloadSplitAllPages);
             document.getElementById('splitDownloadZipBtn').addEventListener('click', downloadSplitAsZip);
         }
 
@@ -849,13 +984,21 @@
                 
                 const arrayBuffer = await file.arrayBuffer();
                 state.split.pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                state.split.totalPages = state.split.pdfDoc.numPages;
                 
                 await generateSplitPreviews();
                 showElement('splitPdfPreview');
+                showElement('splitOptions');
                 showElement('splitNamingSection');
                 document.getElementById('splitProcessBtn').disabled = false;
                 
-                initializeSplitPageNames();
+                // Actualizar valores de rangos
+                document.getElementById('rangeTo').max = state.split.totalPages;
+                document.getElementById('rangeTo').value = state.split.totalPages;
+                
+                // Inicializar rangos por defecto (todas las páginas individuales)
+                initializeDefaultRanges();
+                initializeSplitFileNames();
                 
             } catch (error) {
                 showError('Error al cargar el PDF: ' + error.message);
@@ -865,48 +1008,118 @@
         async function generateSplitPreviews() {
             const pdfPages = document.getElementById('splitPdfPages');
             pdfPages.innerHTML = '';
-            state.split.pageImages = [];
             
-            for (let i = 1; i <= state.split.pdfDoc.numPages; i++) {
-                const page = await state.split.pdfDoc.getPage(i);
-                const viewport = page.getViewport({ scale: 0.2 });
-                
-                const canvas = document.createElement('canvas');
-                const context = canvas.getContext('2d');
-                canvas.width = viewport.width;
-                canvas.height = viewport.height;
-
-                await page.render({
-                    canvasContext: context,
-                    viewport: viewport
-                }).promise;
-
-                state.split.pageImages.push({
-                    pageNumber: i,
-                    previewData: canvas.toDataURL('image/png'),
-                    canvas: canvas
-                });
-
-                const pageElement = createPagePreviewElement(i, canvas.toDataURL('image/png'));
+            for (let i = 1; i <= state.split.totalPages; i++) {
+                const pageElement = createPagePreviewElement(i);
                 pdfPages.appendChild(pageElement);
             }
         }
 
-        function createPagePreviewElement(pageNumber, imageData) {
+        function createPagePreviewElement(pageNumber) {
             const div = document.createElement('div');
             div.className = 'pdf-page';
+            div.setAttribute('data-page', pageNumber);
             div.innerHTML = `
                 <div class="page-preview">📄</div>
                 <div class="page-number">Página ${pageNumber}</div>
             `;
-            div.addEventListener('click', () => showPreviewModal(`Página ${pageNumber}`, imageData));
+            div.addEventListener('click', function() {
+                this.classList.toggle('selected');
+                updateRangeInputs();
+            });
             return div;
         }
 
-        function initializeSplitPageNames() {
-            state.split.pageNames = [];
-            for (let i = 1; i <= state.split.pdfDoc.numPages; i++) {
-                state.split.pageNames.push(`Página ${i}`);
+        function updateSplitMode() {
+            const isRangeMode = document.getElementById('splitRanges').checked;
+            document.getElementById('rangeSelection').style.display = isRangeMode ? 'block' : 'none';
+            
+            if (!isRangeMode) {
+                // Modo todas las páginas individuales
+                initializeDefaultRanges();
+            }
+        }
+
+        function initializeDefaultRanges() {
+            state.split.splitRanges = [];
+            for (let i = 1; i <= state.split.totalPages; i++) {
+                state.split.splitRanges.push({
+                    from: i,
+                    to: i,
+                    name: `Página ${i}`
+                });
+            }
+            updateRangeList();
+        }
+
+        function updateRangeInputs() {
+            const selectedPages = Array.from(document.querySelectorAll('.pdf-page.selected'))
+                .map(el => parseInt(el.getAttribute('data-page')))
+                .sort((a, b) => a - b);
+            
+            if (selectedPages.length > 0) {
+                document.getElementById('rangeFrom').value = Math.min(...selectedPages);
+                document.getElementById('rangeTo').value = Math.max(...selectedPages);
+            }
+        }
+
+        function addRange() {
+            const from = parseInt(document.getElementById('rangeFrom').value);
+            const to = parseInt(document.getElementById('rangeTo').value);
+            
+            if (from < 1 || to > state.split.totalPages || from > to) {
+                showError('Rango inválido. Verifica los números de página.');
+                return;
+            }
+            
+            const rangeName = `Páginas ${from}-${to}`;
+            
+            state.split.splitRanges.push({
+                from: from,
+                to: to,
+                name: rangeName
+            });
+            
+            updateRangeList();
+            
+            // Limpiar selección
+            document.querySelectorAll('.pdf-page.selected').forEach(el => {
+                el.classList.remove('selected');
+            });
+        }
+
+        function updateRangeList() {
+            const container = document.getElementById('rangeList');
+            container.innerHTML = '';
+            
+            state.split.splitRanges.forEach((range, index) => {
+                const rangeItem = document.createElement('div');
+                rangeItem.className = 'range-item';
+                rangeItem.innerHTML = `
+                    <span class="range-display">${range.name} (Páginas ${range.from}-${range.to})</span>
+                    <button class="remove-btn" onclick="removeRange(${index})">❌</button>
+                `;
+                container.appendChild(rangeItem);
+            });
+        }
+
+        function removeRange(index) {
+            state.split.splitRanges.splice(index, 1);
+            updateRangeList();
+        }
+
+        function initializeSplitFileNames() {
+            state.split.fileNames = [];
+            if (document.getElementById('splitAll').checked) {
+                // Todas las páginas individuales
+                for (let i = 1; i <= state.split.totalPages; i++) {
+                    state.split.fileNames.push(`Página ${i}`);
+                }
+            } else {
+                // Según los rangos definidos
+                state.split.splitRanges.forEach((range, index) => {
+                    state.split.fileNames.push(range.name);
+                });
             }
             updateSplitManualNamingInputs();
         }
@@ -920,17 +1133,17 @@
             const container = document.getElementById('splitPageNames');
             container.innerHTML = '';
             
-            state.split.pageNames.forEach((name, index) => {
+            state.split.fileNames.forEach((name, index) => {
                 const inputGroup = document.createElement('div');
                 inputGroup.className = 'page-name-input';
                 inputGroup.innerHTML = `
-                    <span>Página ${index + 1}:</span>
+                    <span>Archivo ${index + 1}:</span>
                     <input type="text" value="${name}" data-index="${index}">
                 `;
                 
                 const input = inputGroup.querySelector('input');
                 input.addEventListener('input', (e) => {
-                    state.split.pageNames[index] = e.target.value || `Página ${index + 1}`;
+                    state.split.fileNames[index] = e.target.value || `Archivo ${index + 1}`;
                 });
                 
                 container.appendChild(inputGroup);
@@ -943,42 +1156,53 @@
             showElement('splitProgressSection');
             hideElement('splitResultsSection');
             
-            let processed = 0;
-            const total = state.split.pdfDoc.numPages;
+            try {
+                state.split.outputFiles = [];
+                let processed = 0;
+                const total = state.split.splitRanges.length;
 
-            // Procesar páginas con mejor calidad
-            for (let i = 1; i <= total; i++) {
-                await processSplitPage(i);
-                processed++;
+                for (let i = 0; i < state.split.splitRanges.length; i++) {
+                    const range = state.split.splitRanges[i];
+                    await processSplitRange(range, i);
+                    processed++;
+                    updateProgress('splitProgressBar', 'splitProgressText', processed, total);
+                }
+
+                showSplitResults();
                 
-                updateProgress('splitProgressBar', 'splitProgressText', processed, total);
+            } catch (error) {
+                showError('Error al procesar el PDF: ' + error.message);
             }
-
-            showSplitResults();
+            
             processBtn.disabled = false;
         }
 
-        async function processSplitPage(pageNumber) {
+        async function processSplitRange(range, index) {
             try {
-                const page = await state.split.pdfDoc.getPage(pageNumber);
-                const viewport = page.getViewport({ scale: 2.0 });
+                const newPdf = await PDFLib.PDFDocument.create();
                 
-                const canvas = document.createElement('canvas');
-                const context = canvas.getContext('2d');
-                canvas.width = viewport.width;
-                canvas.height = viewport.height;
-
-                await page.render({
-                    canvasContext: context,
-                    viewport: viewport
-                }).promise;
-
-                const pageIndex = pageNumber - 1;
-                state.split.pageImages[pageIndex].processedCanvas = canvas;
-                state.split.pageImages[pageIndex].processedData = canvas.toDataURL('image/png');
+                for (let pageNum = range.from; pageNum <= range.to; pageNum++) {
+                    const [originalPage] = await newPdf.copyPages(state.split.pdfDoc, [pageNum - 1]);
+                    newPdf.addPage(originalPage);
+                }
+                
+                const pdfBytes = await newPdf.save();
+                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                
+                // Actualizar nombre si está en modo manual
+                const fileName = document.getElementById('splitManualNaming').checked 
+                    ? state.split.fileNames[index] 
+                    : range.name;
+                
+                state.split.outputFiles.push({
+                    blob: blob,
+                    name: `${fileName}.pdf`,
+                    pageCount: range.to - range.from + 1
+                });
                 
             } catch (error) {
-                console.error(`Error procesando página ${pageNumber}:`, error);
+                console.error(`Error procesando rango ${range.from}-${range.to}:`, error);
+                throw error;
             }
         }
 
@@ -986,77 +1210,63 @@
             const grid = document.getElementById('splitPagesGrid');
             grid.innerHTML = '';
             
-            state.split.pageImages.forEach((page, index) => {
-                const pageElement = document.createElement('div');
-                pageElement.className = 'page-result';
-                pageElement.innerHTML = `
-                    <img src="${page.processedData || page.previewData}" 
-                         alt="${state.split.pageNames[index]}" 
-                         class="page-preview-result"
-                         onclick="showPreviewModal('${state.split.pageNames[index]}', '${page.processedData || page.previewData}')">
-                    <div class="page-name">${state.split.pageNames[index]}</div>
-                    <button class="download-btn" onclick="downloadSplitSinglePage(${index})" style="margin-top: 10px; padding: 8px 16px; font-size: 0.9rem;">
-                        📥 Descargar
+            state.split.outputFiles.forEach((file, index) => {
+                const fileElement = document.createElement('div');
+                fileElement.className = 'page-result';
+                fileElement.innerHTML = `
+                    <div class="page-preview-result" style="display: flex; align-items: center; justify-content: center; font-size: 3rem;">
+                        📄
+                    </div>
+                    <div class="page-name" style="margin: 10px 0; font-weight: 600;">${file.name}</div>
+                    <div style="font-size: 0.9rem; color: #666; margin-bottom: 10px;">
+                        ${file.pageCount} página${file.pageCount > 1 ? 's' : ''}
+                    </div>
+                    <button class="download-btn" onclick="downloadSplitSingleFile(${index})" style="padding: 8px 16px; font-size: 0.9rem; width: 100%;">
+                        📥 Descargar PDF
                     </button>
                 `;
-                grid.appendChild(pageElement);
+                grid.appendChild(fileElement);
             });
             
             showElement('splitResultsSection');
         }
 
-        function downloadSplitSinglePage(pageIndex) {
-            const page = state.split.pageImages[pageIndex];
-            const pageName = state.split.pageNames[pageIndex];
-            
-            if (page.processedCanvas) {
-                page.processedCanvas.toBlob(blob => {
-                    downloadBlob(blob, `${pageName}.png`);
-                });
-            }
-        }
-
-        function downloadSplitAllPages() {
-            state.split.pageImages.forEach((page, index) => {
-                setTimeout(() => {
-                    downloadSplitSinglePage(index);
-                }, index * 100);
-            });
+        function downloadSplitSingleFile(index) {
+            const file = state.split.outputFiles[index];
+            downloadBlob(file.blob, file.name);
         }
 
         async function downloadSplitAsZip() {
             const zip = new JSZip();
             
-            for (let i = 0; i < state.split.pageImages.length; i++) {
-                const page = state.split.pageImages[i];
-                const pageName = state.split.pageNames[i];
-                
-                if (page.processedCanvas) {
-                    const blob = await new Promise(resolve => {
-                        page.processedCanvas.toBlob(resolve);
-                    });
-                    zip.file(`${pageName}.png`, blob);
-                }
-            }
+            state.split.outputFiles.forEach(file => {
+                zip.file(file.name, file.blob);
+            });
             
             const zipBlob = await zip.generateAsync({ type: 'blob' });
-            saveAs(zipBlob, `${state.split.currentFile.name.replace('.pdf', '')}_paginas.zip`);
+            const zipName = `${state.split.currentFile.name.replace('.pdf', '')}_separado.zip`;
+            saveAs(zipBlob, zipName);
         }
 
         function resetSplitTab() {
             state.split.pdfDoc = null;
-            state.split.pageImages = [];
-            state.split.pageNames = [];
+            state.split.totalPages = 0;
             state.split.currentFile = null;
+            state.split.splitRanges = [];
+            state.split.outputFiles = [];
+            state.split.fileNames = [];
             
             document.getElementById('splitFileInput').value = '';
             hideElement('splitFilesList');
             hideElement('splitPdfPreview');
+            hideElement('splitOptions');
             hideElement('splitNamingSection');
             hideElement('splitProgressSection');
             hideElement('splitResultsSection');
             document.getElementById('splitProcessBtn').disabled = true;
             
+            document.getElementById('splitAll').checked = true;
+            document.getElementById('rangeSelection').style.display = 'none';
             document.getElementById('splitAutoNaming').checked = true;
             document.getElementById('splitManualNamingSection').style.display = 'none';
         }
@@ -1346,15 +1556,6 @@
             alert('❌ ' + message);
         }
 
-        function showPreviewModal(title, imageData) {
-            const modalBody = document.getElementById('modalBody');
-            modalBody.innerHTML = `
-                <h3>${title}</h3>
-                <img src="${imageData}" style="max-width: 100%; max-height: 70vh; border-radius: 8px; margin: 15px 0;">
-            `;
-            document.getElementById('previewModal').classList.add('show');
-        }
-
         function downloadBlob(blob, fileName) {
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -1368,8 +1569,8 @@
 
         // Funciones globales para event listeners
         window.removeMergeFile = removeMergeFile;
-        window.downloadSplitSinglePage = downloadSplitSinglePage;
-        window.showPreviewModal = showPreviewModal;
+        window.removeRange = removeRange;
+        window.downloadSplitSingleFile = downloadSplitSingleFile;
 
         console.log('Test PDF Tools cargado correctamente');
     </script>
