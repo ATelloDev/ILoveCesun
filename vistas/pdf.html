@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Separador de PDF - Turtle Convert</title>
+    <title>Extractor de Imágenes de PDF - Turtle Convert</title>
     <link rel="stylesheet" href="../css/main.css">
     <link rel="stylesheet" href="../css/pdf.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
@@ -12,17 +12,17 @@
     <div class="container">
         <div class="header">
             <a href="../index.html" class="back-btn">← Volver al Home</a>
-            <h1><span>🐢</span> Separador de PDF</h1>
-            <p>Separa tu PDF en páginas individuales y nómbralas como quieras</p>
+            <h1><span>🐢</span> Extractor de Imágenes de PDF</h1>
+            <p>Extrae todas las imágenes de tu archivo PDF en la mejor calidad posible</p>
             <div class="file-limit">Límite: 50MB por archivo</div>
         </div>
 
         <div class="main-content">
             <!-- Zona de archivo -->
             <div class="drop-zone" id="dropZone">
-                <div class="file-icon">📄</div>
+                <div class="file-icon">🖼️</div>
                 <h3>Arrastra tu PDF aquí</h3>
-                <p>Selecciona un archivo PDF para separar sus páginas</p>
+                <p>Selecciona un archivo PDF para extraer sus imágenes</p>
                 <button class="browse-btn" id="browseBtn">Seleccionar PDF</button>
                 <input type="file" id="fileInput" style="display: none;" accept=".pdf">
             </div>
@@ -44,24 +44,21 @@
                 </div>
             </div>
 
-            <!-- Configuración de nombres -->
+            <!-- Configuración de extracción -->
             <div class="naming-section" id="namingSection" style="display: none;">
-                <h3>Configura los nombres de las páginas</h3>
+                <h3>Configuración de extracción</h3>
                 <div class="naming-options">
                     <div class="naming-option">
-                        <input type="radio" id="autoNaming" name="namingType" value="auto" checked>
-                        <label for="autoNaming">Nombrado automático (Página 1, Página 2...)</label>
+                        <input type="checkbox" id="extractAll" name="extractAll" checked>
+                        <label for="extractAll">Extraer todas las imágenes del PDF</label>
                     </div>
                     <div class="naming-option">
-                        <input type="radio" id="manualNaming" name="namingType" value="manual">
-                        <label for="manualNaming">Nombrado manual</label>
-                    </div>
-                </div>
-                
-                <div class="manual-naming" id="manualNamingSection" style="display: none;">
-                    <h4>Nombres personalizados:</h4>
-                    <div class="page-names-container" id="pageNamesContainer">
-                        <!-- Los inputs para nombres manuales se generarán aquí -->
+                        <label for="imageFormat">Formato de salida:</label>
+                        <select id="imageFormat" name="imageFormat">
+                            <option value="png">PNG (Calidad máxima)</option>
+                            <option value="jpeg">JPEG (Tamaño reducido)</option>
+                            <option value="webp">WebP (Equilibrado)</option>
+                        </select>
                     </div>
                 </div>
             </div>
@@ -69,7 +66,7 @@
             <!-- Progreso -->
             <div class="progress-section" id="progressSection" style="display: none;">
                 <div class="progress-info">
-                    <span>Procesando páginas...</span>
+                    <span>Extrayendo imágenes...</span>
                     <span id="progressText">0/0</span>
                 </div>
                 <div class="progress-container">
@@ -79,15 +76,15 @@
 
             <!-- Botones de acción -->
             <div class="action-buttons">
-                <button class="action-btn process-btn" id="processBtn" disabled>Separar Páginas</button>
+                <button class="action-btn process-btn" id="processBtn" disabled>Extraer Imágenes</button>
                 <button class="action-btn reset-btn" id="resetBtn">Reiniciar</button>
             </div>
 
             <!-- Resultados -->
             <div class="results-section" id="resultsSection" style="display: none;">
-                <h3>Páginas separadas</h3>
+                <h3>Imágenes extraídas</h3>
                 <div class="download-options">
-                    <button class="download-btn" id="downloadAllBtn">📥 Descargar Todas las Páginas</button>
+                    <button class="download-btn" id="downloadAllBtn">📥 Descargar Todas las Imágenes</button>
                     <button class="download-btn secondary" id="downloadZipBtn">📦 Descargar como ZIP</button>
                 </div>
                 <div class="pages-grid" id="pagesGrid">
